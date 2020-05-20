@@ -12,8 +12,5 @@ Usage of ./fastcrawl:
 
 # Example
 
-<<<<<<< HEAD
 ```./fastcrawl -t https://example.com -c 50```
-=======
-```./fastcrawl -t https://example.com -c 50```
->>>>>>> 33efaa8e00015bfc15d8bdcd77c81cc3578a9a98
+
