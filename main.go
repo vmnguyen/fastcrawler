@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -57,11 +58,25 @@ func doRequest(i interface{}) {
 			if !isAnchor {
 				continue
 			}
-			ok, url := getHref(t)
+			ok, ref := getHref(t)
 			if !ok {
 				continue
 			}
-			fmt.Println(url)
+			if strings.Index(ref, "/") == 0 {
+				ref = ref[1:]
+			}
+			hasProtocol := strings.Index(ref, "http") == 0
+			if hasProtocol {
+				fmt.Println(ref)
+			} else {
+				if strings.Index(url, "http") == 0 {
+					fmt.Printf("%s/%s \n", url, ref)
+				} else {
+					fmt.Printf("https://%s/%s \n", url, ref)
+				}
+
+			}
+
 		}
 	}
 
