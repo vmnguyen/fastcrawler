@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"sync"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/panjf2000/ants/v2"
 	"github.com/valyala/fasthttp"
+	"golang.org/x/net/html"
 )
 
 var (
@@ -18,11 +20,19 @@ var (
 	}
 )
 
+func getHref(t html.Token) (ok bool, href string) {
+	for _, a := range t.Attr {
+		if a.Key == "href" {
+			href = a.Val
+			ok = true
+		}
+	}
+	return
+}
+
 func doRequest(i interface{}) {
-	// TODO
-	// Add code for make request to target
 	url := i.(string)
-	fmt.Println("Send request to target:", url)
+	//fmt.Println("Send request to target:", url)
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseRequest(req)
@@ -30,8 +40,30 @@ func doRequest(i interface{}) {
 
 	req.SetRequestURI(url)
 	client.Do(req, resp)
-	bodyByte := resp.Body()
-	fmt.Println(string(bodyByte))
+	statusCode := resp.StatusCode()
+	fmt.Println("**********************")
+	fmt.Printf("[%d] %s \n", statusCode, url)
+	body := resp.Body()
+	z := html.NewTokenizer(bytes.NewReader(body))
+
+	for {
+		tt := z.Next()
+		switch {
+		case tt == html.ErrorToken:
+			return
+		case tt == html.StartTagToken:
+			t := z.Token()
+			isAnchor := t.Data == "a"
+			if !isAnchor {
+				continue
+			}
+			ok, url := getHref(t)
+			if !ok {
+				continue
+			}
+			fmt.Println(url)
+		}
+	}
 
 }
 
@@ -47,7 +79,7 @@ func runScan(target string, concurency int) {
 		wg.Done()
 	})
 	defer p.Release()
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 55; i++ {
 		wg.Add(1)
 		_ = p.Invoke(target)
 	}
