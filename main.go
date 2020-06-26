@@ -41,9 +41,8 @@ func doRequest(i interface{}) {
 
 	req.SetRequestURI(url)
 	client.Do(req, resp)
-	statusCode := resp.StatusCode()
-	fmt.Println("**********************")
-	fmt.Printf("[%d] %s \n", statusCode, url)
+	//statusCode := resp.StatusCode()
+	//fmt.Printf("[%d] %s \n", statusCode, url)
 	body := resp.Body()
 	z := html.NewTokenizer(bytes.NewReader(body))
 
