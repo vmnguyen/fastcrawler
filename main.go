@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/panjf2000/ants/v2"
+	"github.com/panjf2000/ants"
 	"github.com/valyala/fasthttp"
 	"golang.org/x/net/html"
 )
