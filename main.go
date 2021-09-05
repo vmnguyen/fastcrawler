@@ -21,14 +21,64 @@ var (
 	}
 )
 
+func validateHref(s string) (ok bool) {
+	if s == "javascript:;" {
+		return false
+	}
+	if s == "javascript:void(0);" {
+		return false
+	}
+
+	if s == "#" {
+		return false
+	}
+	if s == "javascript: void(0);" {
+		return false
+	}
+	return true
+}
+
 func getHref(t html.Token) (ok bool, href string) {
 	for _, a := range t.Attr {
 		if a.Key == "href" {
-			href = a.Val
-			ok = true
+			if validateHref(a.Val) {
+				href = a.Val
+				ok = true
+			}
+
 		}
 	}
 	return
+}
+
+func validateAnchor(t html.Token, url string) (link string, err bool) {
+	isAnchor := t.Data == "a"
+	result := ""
+	err = true
+	if isAnchor {
+		ok, ref := getHref(t)
+		if ok {
+			if strings.Index(ref, "/") == 0 {
+				ref = ref[1:]
+
+			}
+			hasProtocol := strings.Index(ref, "http") == 0
+			if hasProtocol {
+				result = ref
+
+			} else {
+				if strings.Index(url, "http") == 0 {
+					result = url + "/" + ref
+				} else {
+					result = "https://" + url + "/" + ref
+				}
+
+			}
+			err = false
+		}
+
+	}
+	return result, err
 }
 
 func doRequest(i interface{}) {
@@ -41,8 +91,11 @@ func doRequest(i interface{}) {
 
 	req.SetRequestURI(url)
 	client.Do(req, resp)
-	//statusCode := resp.StatusCode()
-	//fmt.Printf("[%d] %s \n", statusCode, url)
+	statusCode := resp.StatusCode()
+	if statusCode == 301 {
+		fmt.Print("Redirect found")
+	}
+	fmt.Printf("[%d] %s \n", statusCode, url)
 	body := resp.Body()
 	z := html.NewTokenizer(bytes.NewReader(body))
 
@@ -53,27 +106,9 @@ func doRequest(i interface{}) {
 			return
 		case tt == html.StartTagToken:
 			t := z.Token()
-			isAnchor := t.Data == "a"
-			if !isAnchor {
-				continue
-			}
-			ok, ref := getHref(t)
-			if !ok {
-				continue
-			}
-			if strings.Index(ref, "/") == 0 {
-				ref = ref[1:]
-			}
-			hasProtocol := strings.Index(ref, "http") == 0
-			if hasProtocol {
-				fmt.Println(ref)
-			} else {
-				if strings.Index(url, "http") == 0 {
-					fmt.Printf("%s/%s \n", url, ref)
-				} else {
-					fmt.Printf("https://%s/%s \n", url, ref)
-				}
-
+			newurl, err := validateAnchor(t, url)
+			if !err {
+				fmt.Println(newurl)
 			}
 
 		}
@@ -108,4 +143,5 @@ func main() {
 
 	flag.Parse()
 	runScan(target, concurency)
+
 }
