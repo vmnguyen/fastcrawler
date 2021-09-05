@@ -1,5 +1,16 @@
-# fastcrawler
-Super fast http crawler written in Go
+# Fastcrawler
+A Fast HTTP crawler written in Go
+
+# Install 
+```
+git clone https://github.com/vmnguyen/fastcrawler
+
+cd fastcrawler
+
+go build
+
+```
+
 
 # Usage
 ```
